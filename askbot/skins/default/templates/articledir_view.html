@@ -1,0 +1,36 @@
+{% extends "two_column_body.html" %}
+
+{% load browse_tags %}
+{% load extra_tags %}
+{% load i18n %}
+
+{% block title %}{% spaceless %}{{ article['title'] }}{% endspaceless %}{% endblock %}
+
+{% block content %}
+
+<h1 class="section-title">
+{{ article['title'] }}
+</h1>
+
+<p>
+{{ article['content'] }}
+</p>
+
+{% endblock%}
+
+{% block sidebar%}
+<div class="box">
+
+<h2>Related Articles</h2>
+
+<ul>
+{% for article in related_articles %}
+	<li>
+		<a href="{{ article['url'] }}"> {{ article['title'] }} </a>
+	</li> 
+{% endfor %}
+</ul>
+
+</div>
+
+{% endblock%}

@@ -3,6 +3,7 @@
 	<name>askbot</name>
 	<comment></comment>
 	<projects>
+		<project>django-articles</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

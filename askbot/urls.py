@@ -73,6 +73,14 @@ urlpatterns = patterns('',
 
     # END main page urls
     
+    #===========================================================================
+    # Article URLs
+    #===========================================================================
+    url(r'^articles/view/(?P<slug>.+)', views.articledir.requestView, name='articledirView'),
+    url(r'^articles/tag/(?P<slug>.+)', views.articledir.requestList, name='articledirTag'),
+    # Note- this must be last. We must not match against ending slash, for pagination urls to display properly.
+    url(r'^articles/', views.articledir.requestList, name='articledirHome'),
+    
     url(
         r'^api/get_questions/',
         views.commands.api_get_questions,

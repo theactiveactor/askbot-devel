@@ -609,4 +609,3 @@ def widget_questions(request):
         'threads': threads[:askbot_settings.QUESTIONS_WIDGET_MAX_QUESTIONS]
     }
     return render_into_skin('question_widget.html', data, request) 
-    

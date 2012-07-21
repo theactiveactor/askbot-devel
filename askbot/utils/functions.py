@@ -1,8 +1,8 @@
-import re
-import datetime
-from django.utils.translation import ugettext as _
-from django.utils.translation import ungettext
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.utils.translation import ugettext as _, ungettext
+import datetime
+import re
 
 def get_from_dict_or_object(source, key):
     try:
@@ -160,6 +160,51 @@ def setup_paginator(context):
             "pages_outside_leading_range": pages_outside_leading_range,
             "pages_outside_trailing_range": pages_outside_trailing_range,
         }
+
+def getPaginatorContext(request, objectList, baseUrl, numPerPage, pageVarName='page'):
+    '''
+    Setup context for pagination
+    See concrete example from askbot view: readers.tags() and tags.html for example.
+    
+    Returns: (paginator_context, currentPage)
+    '''
+    # Get current pageNum info.
+    paginator = Paginator(objectList, numPerPage) 
+
+    try:
+        pageNum = int(request.GET.get(pageVarName, '1'))
+    except ValueError:
+        pageNum = 1
+    
+    try:
+        currentPage = paginator.page(pageNum)
+    except PageNotAnInteger:
+        currentPage = paginator.page(1)
+    except EmptyPage:
+        currentPage = paginator.page(paginator.num_pages)
+    
+    # Setup paginator context.
+    if baseUrl[-1] == "/":
+        baseUrl = baseUrl[:-1] + '?'
+    else:
+        baseUrl += "?"
+    
+    paginator_data = {
+        'is_paginated' : (paginator.count > numPerPage),
+
+        'pages': paginator.num_pages,
+        'page': pageNum,
+        'has_previous': currentPage.has_previous(),
+        'has_next': currentPage.has_next(),
+        'previous': currentPage.previous_page_number(),
+        'next': currentPage.next_page_number(),
+        'base_url' : baseUrl,
+        'page_size' : numPerPage,
+    }
+    
+    paginator_context = setup_paginator(paginator_data)
+    
+    return (paginator_context, currentPage)
 
 def get_admin():
     '''Returns an admin users, usefull for raising flags'''

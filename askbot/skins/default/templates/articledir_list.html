@@ -1,0 +1,71 @@
+{% extends "two_column_body.html" %}
+
+{% import "macros.html" as macros %}
+{% load browse_tags %}
+{% load extra_tags %}
+{% load i18n %}
+
+{% block title %}{% spaceless %}
+
+{% if tag %}
+Articles Tagged {{ tag['name'] }}
+{% else %}
+Articles
+{% endif %}
+
+{% endspaceless %}{% endblock %}
+
+{% block content %}
+
+<h1 class="section-title">
+{% if tag %}
+Articles Tagged {{ tag['name'] }}
+{% else %}
+Articles
+{% endif %}
+</h1>
+
+{% if tag %}
+<p> {{ tag['description'] }} </p>
+{% endif %}
+
+<ul>
+{% for article in articles %}
+	<li>
+		<a href="{{ article['url'] }}"> {{ article['title'] }} </a>
+		
+		<p>
+		{{ article['teaser'] }}
+		</p>
+	</li> 
+{% endfor %}
+</ul>
+
+<div class="clean"></div>
+<div class="pager">
+    {{macros.paginator(paginator_context)}}
+</div>
+
+{% endblock %}
+
+
+{% block sidebar%}
+<div class="box">
+
+<h2>Tags</h2>
+
+<ul>
+{% for tag in tags %}
+	<li>
+		{% if tag['is_active'] %}
+			{{ tag['name'] }}
+		{% else %}
+			<a href="{{ tag['url'] }}"> {{ tag['name'] }} </a>
+		{% endif %}
+	</li> 
+{% endfor %}
+</ul>
+
+</div>
+
+{% endblock%}
