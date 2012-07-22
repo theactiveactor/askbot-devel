@@ -6,46 +6,44 @@ By main textual content is meant - text of Questions, Answers and Comments.
 The "read-only" requirement here is not 100% strict, as for example "question" view does
 allow adding new comments via Ajax form post.
 """
+from askbot import const, exceptions, models, schedules
+from askbot.conf import settings as askbot_settings
+from askbot.forms import AnswerForm, ShowQuestionForm
+from askbot.models import Post, Vote
+from askbot.models.signals import search_askbot_signal
+from askbot.models.tag import Tag
+from askbot.search.state_manager import SearchState, DummySearchState
+from askbot.skins.loaders import render_into_skin, \
+    get_template #jinja2 template loading enviroment
+from askbot.templatetags import extra_tags
+from askbot.utils import functions
+from askbot.utils.decorators import anonymous_forbidden, ajax_only, get_only
+from askbot.utils.diff import textDiff as htmldiff
+from askbot.utils.html import sanitize_html
+from django.conf import settings
+from django.contrib.humanize.templatetags import humanize
+from django.core import exceptions as django_exceptions
+from django.core.paginator import Paginator, EmptyPage, InvalidPage
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect, HttpResponse, Http404, \
+    HttpResponseNotAllowed, QueryDict
+from django.shortcuts import get_object_or_404
+from django.template import Context
+from django.utils import simplejson, translation
+from django.utils.html import escape
+from django.utils.translation import ugettext as _, ungettext
+from django.views.decorators import csrf
+import askbot
+import askbot.conf
 import datetime
 import logging
-import urllib
 import operator
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponseRedirect, HttpResponse, Http404, HttpResponseNotAllowed
-from django.core.paginator import Paginator, EmptyPage, InvalidPage
-from django.template import Context
-from django.utils import simplejson
-from django.utils.html import escape
-from django.utils.translation import ugettext as _
-from django.utils.translation import ungettext
-from django.utils import translation
-from django.views.decorators import csrf
-from django.core.urlresolvers import reverse
-from django.core import exceptions as django_exceptions
-from django.contrib.humanize.templatetags import humanize
-from django.http import QueryDict
-from django.conf import settings
+import time
+import urllib
 
-import askbot
-from askbot import exceptions
-from askbot.utils.diff import textDiff as htmldiff
-from askbot.forms import AnswerForm, ShowQuestionForm
-from askbot import models
-from askbot import schedules
-from askbot.models.tag import Tag
-from askbot import const
-from askbot.utils import functions
-from askbot.utils.html import sanitize_html
-from askbot.utils.decorators import anonymous_forbidden, ajax_only, get_only
-from askbot.search.state_manager import SearchState, DummySearchState
-from askbot.templatetags import extra_tags
-import askbot.conf
-from askbot.conf import settings as askbot_settings
-from askbot.skins.loaders import render_into_skin, get_template #jinja2 template loading enviroment
 
 # used in index page
 #todo: - take these out of const or settings
-from askbot.models import Post, Vote
 
 INDEX_PAGE_SIZE = 30
 INDEX_AWARD_SIZE = 15
@@ -133,7 +131,33 @@ def questions(request, **kwargs):
 
     reset_method_count = len(filter(None, [search_state.query, search_state.tags, meta_data.get('author_name', None)]))
 
+    # Fetch any additional search results (from third party apps).
+    extra_results_html = ""
+    if search_state.query:
+        extra_results = search_askbot_signal.send(sender=None, query=search_state.query)
+        
+        search_groups = []
+        for (receiver, search_group) in extra_results:
+            if search_group and search_group.results:
+                search_groups.append(search_group)
+
+        # First sort search_groups by name.
+        sorted(search_groups, key=lambda g: g.name)
+        
+        # Then by priority.
+        sorted(search_groups, key=lambda g: g.priority, reverse=True)
+
+        # Render HTML
+        for search_group in search_groups:
+            extra_results_tpl = get_template('main_page/extra_results.html', request)
+            html = extra_results_tpl.render(Context({'search_group' : search_group}))
+            extra_results_html += html
+            
+        logging.info("dandebug search results html: %s" % extra_results_html)
+    
+
     if request.is_ajax():
+        logging.info("dandebug is ajax")
         q_count = paginator.count
 
         question_counter = ungettext('%(q_num)s question', '%(q_num)s questions', q_count)
@@ -169,6 +193,7 @@ def questions(request, **kwargs):
             'feed_url': context_feed_url,
             'query_string': search_state.query_string(),
             'page_size' : page_size,
+            'extra_results' : extra_results_html,
             'questions': questions_html.replace('\n',''),
             'non_existing_tags': meta_data['non_existing_tags']
         }
@@ -180,7 +205,7 @@ def questions(request, **kwargs):
         return HttpResponse(simplejson.dumps(ajax_data), mimetype = 'application/json')
 
     else: # non-AJAX branch
-
+        logging.info("dandebug is not ajax")
         template_data = {
             'active_tab': 'questions',
             'author_name' : meta_data.get('author_name',None),
@@ -212,6 +237,7 @@ def questions(request, **kwargs):
             'query_string': search_state.query_string(),
             'search_state': search_state,
             'feed_url': context_feed_url,
+            'extra_results' : extra_results_html,
         }
 
         return render_into_skin('main_page.html', template_data, request)

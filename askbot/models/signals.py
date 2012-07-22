@@ -99,3 +99,35 @@ def set_all_db_signal_receivers(receiver_data):
     """
     for (signal, receivers) in receiver_data.items():
         signal.receivers = receivers
+
+# Classes and signal for collecting search results from third party apps.
+class AskbotSearchGroup(object):
+    # TODO: Support more results link
+    def __init__(self, name, priority, results = None):
+        self.name = name
+        self.priority = priority
+        self.results = results
+        
+        if not self.results:
+            self.results = []
+    
+    def addSearchResult(self, result):
+        self.results.append(result)
+
+    def __str__(self):
+        return "name=%s priority=%s results=%i" % (self.name, self.priority, len(self.results))
+
+class AskbotSearchResult(object):
+    # TODO: Support illustration photos.
+    def __init__(self, title, url, description):
+        self.title = title
+        self.url = url
+        self.description = description
+        
+'''
+Each receiver may return 1 group. Groups will be merged by priority (1-10). 
+Higher number means the group will show up first.
+Groups with same priorities will be merged by alphabetical order.
+Questions results (askbot default) will always show up last.
+'''
+search_askbot_signal = django.dispatch.Signal(providing_args=["query"])

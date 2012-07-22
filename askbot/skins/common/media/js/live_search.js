@@ -313,6 +313,7 @@ var liveSearch = function(query_string) {
         if (data['questions'].length > 0){
             $('#pager').toggle(data['paginator'] !== '').html(data['paginator']);
             $('#questionCount').html(data['question_counter']);
+            $('#extra-results').html(data['extra_results']);
             render_search_tags(data['query_data']['tags'], data['query_string']);
             if(data['faces'].length > 0) {
                 $('#contrib-users > a').remove();

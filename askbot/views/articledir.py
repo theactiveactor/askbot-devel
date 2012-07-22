@@ -5,6 +5,8 @@ Requires django-articles to be added as an installed app.
 
 
 from articles.models import Article, Tag
+from askbot.models.signals import AskbotSearchGroup, AskbotSearchResult, \
+    search_askbot_signal
 from askbot.skins.loaders import render_into_skin
 from askbot.utils import functions
 from django.core.urlresolvers import reverse
@@ -14,6 +16,9 @@ from django.template.context import RequestContext
 import logging
 import random
 
+def getArticleUrl(article):
+    return reverse("articledirView", kwargs={"slug" : article.slug})
+
 def getBasicArticleDisplay(article):
     '''
     Return basic display dict for an article entry.
@@ -21,7 +26,7 @@ def getBasicArticleDisplay(article):
     outDict = {}
     
     outDict["title"] = article.title
-    outDict["url"] = reverse("articledirView", kwargs={"slug" : article.slug})
+    outDict["url"] = getArticleUrl(article)
     outDict["teaser"] = article.teaser
     
     return outDict
@@ -143,3 +148,18 @@ def requestList(request, **kwargs):
     context["tags"] = tagDictList
     
     return render_into_skin("articledir_list.html", RequestContext(request, context), request)
+
+def searchArticles(sender, **kwargs):
+    '''
+    Hook for searching articles.
+    TODO: search article content.
+    '''
+    group = AskbotSearchGroup("Articles", 2)
+    query = kwargs["query"]
+    for article in Article.objects.filter(title__icontains=query):
+        result = AskbotSearchResult(article.title, getArticleUrl(article), None)
+        group.addSearchResult(result)
+    
+    return group
+    
+search_askbot_signal.connect(searchArticles)

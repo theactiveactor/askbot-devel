@@ -10,6 +10,9 @@
 <!-- questions.html -->
 {% block title %}{% spaceless %}{% trans %}Questions{% endtrans %}{% endspaceless %}{% endblock %}
 {% block content %}
+	<div id="extra-results">
+		{{ extra_results }}
+	</div>
     {% include "main_page/tab_bar.html" %}
     {% include "main_page/headline.html" %}
     {# ==== BEGIN: main_page/content.html === #}
