@@ -15,6 +15,7 @@ import time
 import urlparse
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseForbidden, Http404
 from django.utils import simplejson
 from django.utils.html import strip_tags, escape
@@ -24,6 +25,7 @@ from django.core import exceptions
 from django.conf import settings
 from django.views.decorators import csrf
 
+from askbot import exceptions as askbot_exceptions
 from askbot import forms
 from askbot import models
 from askbot.skins.loaders import render_into_skin
@@ -217,8 +219,10 @@ def ask(request):#view used to ask a new question
             ask_anonymously = form.cleaned_data['ask_anonymously']
 
             if request.user.is_authenticated():
+                
+                user = form.get_post_user(request.user)
                 try:
-                    question = request.user.post_question(
+                    question = user.post_question(
                         title = title,
                         body_text = text,
                         tags = tagnames,
@@ -375,7 +379,9 @@ def edit_question(request, id):
                         is_anon_edit = form.cleaned_data['stay_anonymous']
                         is_wiki = form.cleaned_data.get('wiki', question.wiki)
 
-                        request.user.edit_question(
+                        user = form.get_post_user(request.user)
+
+                        user.edit_question(
                             question = question,
                             title = form.cleaned_data['title'],
                             body_text = form.cleaned_data['text'],
@@ -445,7 +451,8 @@ def edit_answer(request, id):
 
                 if form.is_valid():
                     if form.has_changed():
-                        request.user.edit_answer(
+                        user = form.get_post_user(request.user)
+                        user.edit_answer(
                                 answer = answer,
                                 body_text = form.cleaned_data['text'],
                                 revision_comment = form.cleaned_data['summary'],
@@ -491,13 +498,20 @@ def answer(request, id):#process a new answer
             if request.user.is_authenticated():
                 try:
                     follow = form.cleaned_data['email_notify']
-                    answer = request.user.post_answer(
+
+                    user = form.get_post_user(request.user)
+
+                    answer = user.post_answer(
                                         question = question,
                                         body_text = text,
                                         follow = follow,
                                         wiki = wiki,
                                         timestamp = update_time,
                                     )
+                    return HttpResponseRedirect(answer.get_absolute_url())
+                except askbot_exceptions.AnswerAlreadyGiven, e:
+                    request.user.message_set.create(message = unicode(e))
+                    answer = question.thread.get_answers_by_user(request.user)[0]
                     return HttpResponseRedirect(answer.get_absolute_url())
                 except exceptions.PermissionDenied, e:
                     request.user.message_set.create(message = unicode(e))

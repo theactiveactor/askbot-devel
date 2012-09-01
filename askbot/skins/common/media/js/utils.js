@@ -1,6 +1,10 @@
 //var $, scriptUrl, askbotSkin
+/**
+ * attention - this function needs to be retired
+ * as it cannot accurately give url to the media file
+ */
 var mediaUrl = function(resource){
-    return askbot['settings']['static_url'] + askbotSkin + '/' + resource;
+    return askbot['settings']['static_url'] + 'default' + '/' + resource;
 };
 
 var cleanUrl = function(url){
@@ -309,6 +313,7 @@ TippedInput.prototype.decorate = function(element){
     this._element = element;
     var instruction_text = this.getVal();
     this._instruction = instruction_text;
+    this.reset();
     var me = this;
     $(element).focus(function(){
         if (me.isBlank()){
