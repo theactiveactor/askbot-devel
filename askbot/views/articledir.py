@@ -74,17 +74,10 @@ def requestView(request, **kwargs):
         raise Http404
 
     # Gather display for article.
-    context["article"] = getBasicArticleDisplay(currentArticle)
-    
-    context["article"]["content"] = currentArticle.rendered_content
+    context["article"] = currentArticle
     
     # Gather display for related articles.
-    relatedArticles = getRelatedArticles(currentArticle)
-    relatedArticleDicts = []
-    for article in relatedArticles:
-        relatedArticleDicts.append(getBasicArticleDisplay(article))
-    
-    context["related_articles"] = relatedArticleDicts
+    context["related_articles"] = getRelatedArticles(currentArticle)
     
     return render_into_skin("articledir_view.html", RequestContext(request, context), request)
 
@@ -101,7 +94,7 @@ def requestList(request, **kwargs):
     if "slug" in kwargs:
         try:
             currentTag = Tag.objects.get(slug=kwargs["slug"])
-            context["tag"] = getBasicTagDisplay(currentTag)
+            context["current_tag"] = currentTag
         except Tag.DoesNotExist,e:
             logging.error("Tag does not exist: %s %s" % (currentTag, e))
             raise Http404
@@ -125,8 +118,6 @@ def requestList(request, **kwargs):
     context["paginator_context"] = paginator_context
     
     # Create display data for articles.
-    articleDictList = []
-    
     articles = list(currentPage.object_list)
     
     # Shuffle articles if a tag is specified. This improves the uniqueness of each tag page (hopefully).
@@ -134,18 +125,10 @@ def requestList(request, **kwargs):
         random.seed(currentTag.id)
         random.shuffle(articles)
     
-    for article in articles:
-        articleDictList.append(getBasicArticleDisplay(article))
-    
-    context["articles"] = articleDictList
+    context["articles"] = articles
     
     # Create display data for tags.
-    tagDictList = []
-    
-    for tag in Tag.objects.all():
-        tagDictList.append(getBasicTagDisplay(tag, tag==currentTag))
-    
-    context["tags"] = tagDictList
+    context["tags"] = Tag.objects.all()
     
     return render_into_skin("articledir_list.html", RequestContext(request, context), request)
 

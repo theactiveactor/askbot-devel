@@ -1,20 +1,28 @@
 {% extends "two_column_body.html" %}
 
+{% block forestyle %}
+<link rel="stylesheet" href="{{"style/buttonPro.css"|media}}" type="text/css" media="screen" />
+{% endblock %}
+
 {% load browse_tags %}
 {% load extra_tags %}
 {% load i18n %}
 
-{% block title %}{% spaceless %}{{ article['title'] }}{% endspaceless %}{% endblock %}
+{% block title %}{% spaceless %}{{article.title}}{% endspaceless %}{% endblock %}
 
 {% block content %}
 
 <h1 class="section-title">
-{{ article['title'] }}
+{{article.title}}
 </h1>
 
 <p>
-{{ article['content'] }}
+{{article.rendered_content}}
 </p>
+
+<div class="submitContentButton">
+	<a class="buttonPro black" href="{% url submitArticleSuggestion article.id %} ">Submit a Suggestion</a>
+</div>
 
 {% endblock%}
 
@@ -26,7 +34,7 @@
 <ul>
 {% for article in related_articles %}
 	<li>
-		<a href="{{ article['url'] }}"> {{ article['title'] }} </a>
+		<a href="{{article.get_absolute_url()}}"> {{article.title}} </a>
 	</li> 
 {% endfor %}
 </ul>

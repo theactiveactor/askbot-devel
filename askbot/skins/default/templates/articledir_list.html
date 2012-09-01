@@ -7,8 +7,8 @@
 
 {% block title %}{% spaceless %}
 
-{% if tag %}
-Articles Tagged {{ tag['name'] }}
+{% if current_tag %}
+Articles Tagged {{current_tag.name}}
 {% else %}
 Articles
 {% endif %}
@@ -18,24 +18,24 @@ Articles
 {% block content %}
 
 <h1 class="section-title">
-{% if tag %}
-Articles Tagged {{ tag['name'] }}
+{% if current_tag %}
+Articles Tagged {{ current_tag.name }}
 {% else %}
 Articles
 {% endif %}
 </h1>
 
-{% if tag %}
-<p> {{ tag['description'] }} </p>
+{% if current_tag %}
+<p> {{current_tag.description}} </p>
 {% endif %}
 
 <ul>
 {% for article in articles %}
 	<li>
-		<a href="{{ article['url'] }}"> {{ article['title'] }} </a>
+		<a href="{{article.get_absolute_url()}}"> {{article.title}} </a>
 		
 		<p>
-		{{ article['teaser'] }}
+		{{article.teaser}}
 		</p>
 	</li> 
 {% endfor %}
@@ -57,10 +57,10 @@ Articles
 <ul>
 {% for tag in tags %}
 	<li>
-		{% if tag['is_active'] %}
-			{{ tag['name'] }}
+		{% if tag == current_tag %}
+			{{tag.name}}
 		{% else %}
-			<a href="{{ tag['url'] }}"> {{ tag['name'] }} </a>
+			<a href="{{tag.get_absolute_url()}}">{{tag.name}}</a>
 		{% endif %}
 	</li> 
 {% endfor %}
