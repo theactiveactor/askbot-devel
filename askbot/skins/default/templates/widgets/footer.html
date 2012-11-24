@@ -33,6 +33,8 @@
                 {{settings.APP_COPYRIGHT}} {% trans license=settings.LICENSE_TITLE %}Content on this site is licensed under a {{license}}{% endtrans %}
             </div>
             {% endif %}
+        {% else %}
+        <div class="copyright">Copyright (c) 2012 {{settings.SITE_NAME}}</div>
         {% endif %}
         <div class="footer-links" >
             <a href="{% url about %}">{% trans %}about{% endtrans %}</a><span class="link-separator"> |</span>

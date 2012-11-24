@@ -17,6 +17,17 @@ GENERAL_SKIN_SETTINGS = ConfigurationGroup(
                 )
 
 settings.register(
+    values.StringValue(
+        GENERAL_SKIN_SETTINGS,
+        'SITE_NAME',
+        description = _('Site Name'),
+        help_text = _(
+                    'Site name, used in a few places for default text.'
+                    )
+    )
+)
+
+settings.register(
     values.ImageValue(
         GENERAL_SKIN_SETTINGS,
         'SITE_LOGO_URL',

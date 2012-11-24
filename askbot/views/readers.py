@@ -73,6 +73,11 @@ def questions(request, **kwargs):
     if request.method != 'GET':
         return HttpResponseNotAllowed(['GET'])
 
+    # "query" GET variable specified, this means that user is searching from a non-question page
+    # (without JS post processing). Initialize the query value with this.
+    if 'query' in request.GET and request.GET['query']:
+        kwargs['query'] = request.GET['query'] 
+
     search_state = SearchState(user_logged_in=request.user.is_authenticated(), **kwargs)
     page_size = int(askbot_settings.DEFAULT_QUESTIONS_PAGE_SIZE)
 

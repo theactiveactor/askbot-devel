@@ -1,18 +1,15 @@
-<h1 class="search-result-summary">
-{{ search_group.results|length }} {{ search_group.name }}
-</h1>
+<h2 class="search-result-summary">
+{{ search_group.results|length }} {{ search_group.name|lower }}
+</h2>
 
 <div class="clean"></div>
 
-<ul>
-{% for result in search_group.results %}
-<li>
-	<a href="{{ result.url }}">{{ result.title }}</a>
-	{% if result.description %}
-		<br />
-		{{ result.description }}
-	{% endif %}
-
-</li>
-{% endfor %}
-</ul>
+	{% for result in search_group.results %}
+	<div class="short-summary">
+		<a href="{{ result.url }}">{{ result.title }}</a>
+		{% if result.description %}
+			<br />
+			{{ result.description }}
+		{% endif %}
+	</div>
+	{% endfor %}
